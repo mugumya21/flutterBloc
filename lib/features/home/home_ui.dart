@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:glocery/features/cart/cart_ui.dart';
 import 'package:glocery/features/home/bloc/home_bloc.dart';
+import 'package:glocery/features/home/home_product_data_model.dart';
+import 'package:glocery/features/home/product_tile_widget.dart';
 // import 'package:glocery/features/home/bloc/home_bloc.dart';
 
 
@@ -19,6 +21,12 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   final HomeBloc homeBloc = HomeBloc();
 
+  @override
+  void initState() {
+    homeBloc.add(HomeInitialEvent());
+    super.initState();
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -30,9 +38,18 @@ class _HomeState extends State<Home> {
         if(state is HomeNavigateToCartPAgeActionState){
           Navigator.push(context, MaterialPageRoute(builder: (context)=>const Cart()));
         }
+        else  if(state is HomeNavigateToWishLIstActionState){
+          Navigator.push(context, MaterialPageRoute(builder: (context)=>const Cart()));
+        }
       },
       builder: (context, state) {
-       return Scaffold(
+        switch(state.runtimeType){
+          case HomeLoadingState:
+          return  const Scaffold(body: Center(child: CircularProgressIndicator(),));
+
+          case HomeLoadedSuccessState:
+          final successState = state as HomeLoadedSuccessState; 
+      return Scaffold(
     appBar: AppBar(
       backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       title: Text(widget.title),
@@ -52,11 +69,24 @@ class _HomeState extends State<Home> {
         ),
       ],
     ),
-    // Other widgets for the body of the scaffold can be added here
+    body: ListView.builder(itemCount: successState.products.length,
+      itemBuilder: (context, index){
+      return ProductTileWidget(productDataModel: successState.products[index],);
+    }),
   );
+          case HomeErrorState:
+          return( const Scaffold(body: Center(child: Text("Internet! Reload your Screen"),),));
+          
+          default:
+          return SizedBox();
+        }
+
+     
     },
 
     );
 }
 
 }
+
+
